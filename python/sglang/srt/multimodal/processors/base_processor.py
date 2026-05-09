@@ -1,3 +1,4 @@
+import asyncio
 import concurrent
 import concurrent.futures
 import dataclasses
@@ -728,7 +729,7 @@ class BaseMultimodalProcessor(ABC):
 
         return is_precomputed, images, videos, audios
 
-    def load_mm_data(
+    async def load_mm_data(
         self,
         prompt: str,
         multimodal_tokens: MultimodalSpecialTokens,
@@ -783,7 +784,7 @@ class BaseMultimodalProcessor(ABC):
             )
         # For models other than MiniCPMO and MiniCPMV,
         # totally align multimodal_tokens, fast path
-        return self.fast_load_mm_data(
+        return await self.fast_load_mm_data(
             prompt=prompt,
             multimodal_tokens=multimodal_tokens,
             image_data=image_data,
@@ -794,7 +795,7 @@ class BaseMultimodalProcessor(ABC):
             audio_sample_rate=audio_sample_rate,
         )
 
-    def fast_load_mm_data(
+    async def fast_load_mm_data(
         self,
         prompt: str,
         multimodal_tokens: MultimodalSpecialTokens,
@@ -846,7 +847,7 @@ class BaseMultimodalProcessor(ABC):
 
         for modality, idx, future in futures:
             try:
-                result = future.result()
+                result = await asyncio.wrap_future(future)
             except Exception as e:
                 logger.exception(
                     "[load_mm_data(simple)] error loading %s data at index=%d",
